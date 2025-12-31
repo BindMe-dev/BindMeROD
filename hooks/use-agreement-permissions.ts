@@ -56,6 +56,7 @@ export function useAgreementPermissions(
       isWitness,
       hasSignedAsCounterparty,
       hasSignedAsWitness,
+      isAdmin: false, // TODO: Implement admin detection from user role/permissions
     }
 
     const actions = getAvailableActions(agreement, userContext)
