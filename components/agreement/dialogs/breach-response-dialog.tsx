@@ -39,13 +39,15 @@ export function BreachResponseDialog({
   const [message, setMessage] = useState("")
   const [evidence, setEvidence] = useState<File[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState("")
 
   const handleSubmit = async () => {
     if (!message.trim()) {
-      alert("Please provide a response message")
+      setError("Please provide a response message")
       return
     }
     
+    setError("")
     setIsSubmitting(true)
     try {
       await onRespond(responseType, message.trim(), evidence.length > 0 ? evidence : undefined)
@@ -55,6 +57,7 @@ export function BreachResponseDialog({
       setResponseType("acknowledge")
     } catch (error) {
       console.error("Respond to breach failed:", error)
+      setError(error instanceof Error ? error.message : "Failed to respond to breach")
     } finally {
       setIsSubmitting(false)
     }
@@ -87,6 +90,12 @@ export function BreachResponseDialog({
         </DialogHeader>
         
         <div className="space-y-5 py-4">
+          {error && (
+            <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+              <p className="text-sm text-red-300">{error}</p>
+            </div>
+          )}
+          
           <div className="space-y-3">
             <Label className="text-sm text-slate-200">Response Type *</Label>
             <RadioGroup

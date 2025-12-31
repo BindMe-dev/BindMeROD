@@ -543,48 +543,40 @@ export function SmartActionPanel({
         </div>
       </CardContent>
 
-      {/* Hidden Dialog Components - Rendered but controlled by triggers */}
+      {/* Dialog Components - Conditionally rendered */}
       {actions.canWithdrawOffer && onWithdraw && (
-        <div className="hidden">
-          <WithdrawDialog
-            agreementId={agreement.id}
-            onWithdraw={onWithdraw}
-            triggerId={`withdraw-trigger-${agreement.id}`}
-          />
-        </div>
+        <WithdrawDialog
+          agreementId={agreement.id}
+          onWithdraw={onWithdraw}
+          triggerId={`withdraw-trigger-${agreement.id}`}
+        />
       )}
 
       {actions.canTerminateAgreement && onTerminate && (
-        <div className="hidden">
-          <TerminateDialog
-            agreementId={agreement.id}
-            onTerminate={onTerminate}
-            triggerId={`terminate-trigger-${agreement.id}`}
-          />
-        </div>
+        <TerminateDialog
+          agreementId={agreement.id}
+          onTerminate={onTerminate}
+          triggerId={`terminate-trigger-${agreement.id}`}
+        />
       )}
 
       {actions.canReportBreach && onReportBreach && (
-        <div className="hidden">
-          <BreachReportDialog
-            agreementId={agreement.id}
-            onReport={onReportBreach}
-            triggerId={`breach-report-trigger-${agreement.id}`}
-          />
-        </div>
+        <BreachReportDialog
+          agreementId={agreement.id}
+          onReport={onReportBreach}
+          triggerId={`breach-report-trigger-${agreement.id}`}
+        />
       )}
 
       {onRespondToBreach && (
-        <div className="hidden">
-          <BreachResponseDialog
-            agreementId={agreement.id}
-            breachId={agreement.id}
-            onRespond={async (responseType, message, evidence) => {
-              await onRespondToBreach(responseType, message, evidence)
-            }}
-            triggerId={`breach-response-trigger-${agreement.id}`}
-          />
-        </div>
+        <BreachResponseDialog
+          agreementId={agreement.id}
+          breachId={agreement.id}
+          onRespond={async (responseType, message, evidence) => {
+            await onRespondToBreach(responseType, message, evidence)
+          }}
+          triggerId={`breach-response-trigger-${agreement.id}`}
+        />
       )}
     </Card>
   )

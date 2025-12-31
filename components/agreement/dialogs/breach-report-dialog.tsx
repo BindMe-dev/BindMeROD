@@ -27,13 +27,15 @@ export function BreachReportDialog({ agreementId, onReport, triggerId }: BreachR
   const [description, setDescription] = useState("")
   const [evidence, setEvidence] = useState<File[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState("")
 
   const handleSubmit = async () => {
     if (!description.trim()) {
-      alert("Please describe the breach")
+      setError("Please describe the breach")
       return
     }
     
+    setError("")
     setIsSubmitting(true)
     try {
       await onReport(description.trim(), evidence.length > 0 ? evidence : undefined)
@@ -42,6 +44,7 @@ export function BreachReportDialog({ agreementId, onReport, triggerId }: BreachR
       setEvidence([])
     } catch (error) {
       console.error("Report breach failed:", error)
+      setError(error instanceof Error ? error.message : "Failed to report breach")
     } finally {
       setIsSubmitting(false)
     }
@@ -75,6 +78,12 @@ export function BreachReportDialog({ agreementId, onReport, triggerId }: BreachR
         </DialogHeader>
         
         <div className="space-y-4 py-4">
+          {error && (
+            <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+              <p className="text-sm text-red-300">{error}</p>
+            </div>
+          )}
+          
           <div className="space-y-2">
             <Label htmlFor="description" className="text-sm text-slate-200">
               Breach Description *

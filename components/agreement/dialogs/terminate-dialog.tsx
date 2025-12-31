@@ -27,13 +27,15 @@ export function TerminateDialog({ agreementId, onTerminate, triggerId }: Termina
   const [open, setOpen] = useState(false)
   const [reason, setReason] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState("")
 
   const handleSubmit = async () => {
     if (!reason.trim()) {
-      alert("Please provide a reason for termination")
+      setError("Please provide a reason for termination")
       return
     }
     
+    setError("")
     setIsSubmitting(true)
     try {
       await onTerminate(reason.trim())
@@ -41,6 +43,7 @@ export function TerminateDialog({ agreementId, onTerminate, triggerId }: Termina
       setReason("")
     } catch (error) {
       console.error("Terminate failed:", error)
+      setError(error instanceof Error ? error.message : "Failed to terminate agreement")
     } finally {
       setIsSubmitting(false)
     }
@@ -68,6 +71,12 @@ export function TerminateDialog({ agreementId, onTerminate, triggerId }: Termina
         </AlertDialogHeader>
         
         <div className="space-y-4 py-4">
+          {error && (
+            <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+              <p className="text-sm text-red-300">{error}</p>
+            </div>
+          )}
+          
           <div className="space-y-2">
             <Label htmlFor="reason" className="text-sm text-slate-200">
               Reason for Termination *
