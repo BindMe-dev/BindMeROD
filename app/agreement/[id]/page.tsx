@@ -35,7 +35,6 @@ import {
 import { cn } from "@/lib/utils"
 import { getStatusBadge } from "@/lib/agreement-actions"
 import { AgreementSignatureStatus } from "@/components/agreement-signature-status"
-import { AgreementActionButtons } from "@/components/agreement-action-buttons"
 import { AgreementLegalBoilerplate } from "@/components/agreement-legal-boilerplate"
 import { SmartActionPanel } from "@/components/smart-action-panel"
 import { AgreementDetailsBlock } from "@/components/agreement-details-block"
@@ -43,7 +42,6 @@ import { DisputeResolutionPanel } from "@/components/dispute-resolution-panel"
 import { AgreementChat } from "@/components/agreement-chat"
 import { EmailConfirmationPreview } from "@/components/email-confirmation-preview"
 import { CounterpartySignDialog } from "@/components/counterparty-sign-dialog"
-import { CreatorSignDialog } from "@/components/creator-sign-dialog"
 import { WitnessAgreementDialog } from "@/components/witness-agreement-dialog"
 import { CompletionCertificate } from "@/components/completion-certificate"
 import { AmendmentRequestPanel } from "@/components/amendment-request-panel"
@@ -685,61 +683,9 @@ export default function AgreementDetailsPage({ params }: { params: Promise<{ id:
               </div>
             </CardHeader>
             <CardContent className="space-y-8 relative p-4 sm:p-6">
-              {/* Primary actions surfaced at the top for quick access */}
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <div className="flex flex-wrap gap-3">
-                  <AgreementActionButtons
-                    agreement={agreement}
-                    userContext={permissions.userContext}
-                    onDelete={handleDelete}
-                    onComplete={handleComplete}
-                    onSignAsCounterparty={handleCounterpartySign}
-                    onSignAsCreator={handleCreatorSign}
-                    onRejectCompletion={handleRejectCompletion}
-                    onRejectSignature={handleRejectSignature}
-                    onTriggerLegal={handleTriggerLegalResolution}
-                    onProposeFriendly={handleProposeFriendlyArrangement}
-                    onSendForSignature={handleSendForSignature}
-                    onCancel={handleCancel}
-                    onWithdraw={
-                      canWithdraw
-                        ? async () => {
-                            try {
-                              const res = await fetch(`/api/agreements/${resolvedParams.id}/withdraw`, {
-                                method: "POST",
-                                credentials: "include",
-                              })
-                              if (!res.ok) {
-                                const data = await res.json().catch(() => ({}))
-                                throw new Error(data.error || "Failed to withdraw")
-                              }
-                              await refreshAgreements()
-                            } catch (err) {
-                              alert(err instanceof Error ? err.message : "Failed to withdraw")
-                            }
-                          }
-                        : undefined
-                    }
-                    onDuplicate={async () => {
-                      try {
-                        const res = await fetch(`/api/agreements/${resolvedParams.id}/duplicate`, {
-                          method: "POST",
-                          credentials: "include",
-                        })
-                        if (!res.ok) throw new Error("Failed to duplicate")
-                        const data = await res.json()
-                        router.push(`/agreement/${data.id}`)
-                      } catch (err) {
-                        alert(err instanceof Error ? err.message : "Failed to duplicate")
-                      }
-                    }}
-                    counterpartySignTriggerId={counterpartySignTriggerId}
-                    creatorSignTriggerId={creatorSignTriggerId}
-                  />
-                </div>
-                {/* Witness signing logic */}
-                {isDesignatedWitness && (
-                  <div className="flex items-center gap-2">
+              {/* Witness signing logic */}
+              {isDesignatedWitness && (
+                <div className="flex items-center gap-2">
                     {canWitnessSign ? (
                       <WitnessAgreementDialog agreement={agreement} onWitnessed={refreshAgreements} />
                     ) : (
@@ -755,7 +701,6 @@ export default function AgreementDetailsPage({ params }: { params: Promise<{ id:
                     )}
                   </div>
                 )}
-              </div>
 
               {/* Enhanced Information Grid */}
               <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -997,6 +942,31 @@ export default function AgreementDetailsPage({ params }: { params: Promise<{ id:
                         }
                       : undefined
                   }
+                  onDelete={handleDelete}
+                  onReject={async () => {
+                    // Open reject signature dialog
+                    // For now, just redirect or show inline - this can be enhanced with the RejectSignatureDialog
+                    const reason = window.prompt("Please provide a reason for rejection:")
+                    if (reason) {
+                      await handleRejectSignature(reason, "hard")
+                    }
+                  }}
+                  onResend={async () => {
+                    try {
+                      const res = await fetch(`/api/agreements/${resolvedParams.id}/send-for-signature`, {
+                        method: "POST",
+                        credentials: "include",
+                      })
+                      if (!res.ok) {
+                        const data = await res.json().catch(() => ({}))
+                        throw new Error(data.error || "Failed to resend")
+                      }
+                      await refreshAgreements()
+                    } catch (err) {
+                      alert(err instanceof Error ? err.message : "Failed to resend")
+                    }
+                  }}
+                  onRefresh={refreshAgreements}
                 />
 
                 <div className="flex gap-3 pt-4 flex-wrap">
@@ -1009,6 +979,23 @@ export default function AgreementDetailsPage({ params }: { params: Promise<{ id:
           <AgreementChat agreementId={resolvedParams.id} />
         </div>
       </main>
+
+      {/* Hidden trigger buttons for dialog activation */}
+      <div className="hidden">
+        {/* Counterparty Sign Dialog Trigger */}
+        <CounterpartySignDialog 
+          agreement={agreement} 
+          onSign={handleCounterpartySign}
+          triggerId={counterpartySignTriggerId}
+        />
+        {/* Creator Sign Dialog Trigger */}
+        <CounterpartySignDialog 
+          agreement={agreement} 
+          role="creator"
+          onSign={handleCreatorSign}
+          triggerId={creatorSignTriggerId}
+        />
+      </div>
 
       {/* Completion Certificate Modal */}
       {showCertificate && agreement && user && (
