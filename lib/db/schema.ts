@@ -23,6 +23,10 @@ export const users = pgTable(
     verifiedAddress: text("verifiedAddress"),
     verifiedDob: text("verifiedDob"),
     documentReference: text("documentReference"), // Document number (not full document)
+    // Two-Factor Authentication fields
+    twoFactorEnabled: boolean("twoFactorEnabled").default(false),
+    twoFactorSecret: text("twoFactorSecret"),
+    backupCodes: text("backupCodes"), // JSON array of backup codes
     createdAt: timestamp("createdAt", { withTimezone: false }).defaultNow().notNull(),
   },
   (table) => ({
