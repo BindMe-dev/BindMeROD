@@ -18,8 +18,8 @@ export async function GET() {
     // Check database connection
     try {
       const result = await db.execute({ sql: "SELECT 1 as health", args: [] })
-      // Verify we got a response and it's valid
-      checks.database = result !== null && result !== undefined
+      // Verify we got a valid response with rows
+      checks.database = !!(result && result.rows && result.rows.length > 0)
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
         console.error("Database health check failed:", error)
