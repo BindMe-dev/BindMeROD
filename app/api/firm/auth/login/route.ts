@@ -39,19 +39,32 @@ export async function POST(request: NextRequest) {
     // Check if firm has password set
     if (!firm.passwordHash) {
       return NextResponse.json(
-        { error: "Please set up your password first. Contact support." },
+        { error: "Please reset your password. Check your email for instructions." },
         { status: 401 }
       )
     }
 
-    // Verify password
-    const isValid = await verifyPassword(password, firm.passwordHash)
+    // Verify password with auto-migration support
+    const { valid, needsRehash, newHash } = await verifyPassword(password, firm.passwordHash)
 
-    if (!isValid) {
+    if (!valid) {
       return NextResponse.json(
         { error: "Invalid email or password" },
         { status: 401 }
       )
+    }
+
+    // Auto-migrate legacy SHA-256 hash to bcrypt
+    if (needsRehash && newHash) {
+      await db
+        .update(lawFirms)
+        .set({ 
+          passwordHash: newHash,
+          updatedAt: new Date(),
+        })
+        .where(eq(lawFirms.id, firm.id))
+      
+      console.log(`[SECURITY] Auto-migrated password hash for firm: ${firm.email}`)
     }
 
     // Check firm status

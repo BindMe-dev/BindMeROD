@@ -23,6 +23,7 @@
     "docker:logs": "docker compose logs -f",
     "db:migrate": "drizzle-kit migrate",
     "db:migrate:lawfirm": "node scripts/migrate-law-firm-features.js",
+    "db:migrate:firm-passwords": "npx ts-node scripts/migrate-firm-passwords.ts",
     "db:studio": "drizzle-kit studio",
     "pages:build": "npx @cloudflare/next-on-pages"
   },
