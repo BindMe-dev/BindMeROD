@@ -9,12 +9,12 @@ export async function sendEmail({ to, subject, html }: EmailOptions) {
   try {
     const nodemailer = require('nodemailer')
     const transporter = nodemailer.createTransport({
-      host: 'smtp.hostinger.com',
-      port: 587,
+      host: process.env.MAIL_HOST || 'smtp.hostinger.com',
+      port: parseInt(process.env.MAIL_PORT || '587'),
       secure: false,
       auth: {
-        user: 'contact@bindme.co.uk',
-        pass: 'w/U2Qk#YB',
+        user: process.env.MAIL_USERNAME,
+        pass: process.env.MAIL_PASSWORD,
       },
       tls: {
         rejectUnauthorized: false,
@@ -22,7 +22,7 @@ export async function sendEmail({ to, subject, html }: EmailOptions) {
     })
 
     const result = await transporter.sendMail({
-      from: '"BindMe" <contact@bindme.co.uk>',
+      from: `"${process.env.MAIL_FROM_NAME || 'BindMe'}" <${process.env.MAIL_FROM_ADDRESS || 'contact@bindme.co.uk'}>`,
       to,
       subject,
       html,
