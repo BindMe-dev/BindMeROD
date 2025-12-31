@@ -31,30 +31,8 @@ next-env.d.ts
 .vercel
 .env*.local
 
-# Security - Prevent sensitive files
+# SSH keys and sensitive files
 *.pem
 *.key
-*.p12
-*.pfx
 *_ssh_key*
-*ssh_key*
 hostinger*
-*.env.local
-*.env.production
-.env*.local
-
-# Debug files that might contain credentials
-*debug*.html
-*login-redirect*.html
-*test-login*.html
-
-# IDE and system files that might contain secrets
-.idea/
-*.sublime-workspace
-.vscode/settings.json
-.vscode/launch.json
-
-# Backup files
-*.bak
-*.backup
-*.old
