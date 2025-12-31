@@ -5,7 +5,8 @@ import type { Agreement } from "@/lib/agreement-types"
 export function useAgreementPermissions(
   agreement: Agreement | null,
   userId: string,
-  userEmail: string
+  userEmail: string,
+  isAdmin: boolean = false
 ) {
   return useMemo(() => {
     if (!agreement) {
@@ -56,6 +57,7 @@ export function useAgreementPermissions(
       isWitness,
       hasSignedAsCounterparty,
       hasSignedAsWitness,
+      isAdmin,
     }
 
     const actions = getAvailableActions(agreement, userContext)
@@ -79,5 +81,5 @@ export function useAgreementPermissions(
         isWitness,
       }
     }
-  }, [agreement, userId, userEmail])
+  }, [agreement, userId, userEmail, isAdmin])
 }
