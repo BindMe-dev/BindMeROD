@@ -23,12 +23,16 @@ export async function middleware(request: NextRequest) {
     const hasSessionCookie = sessionCookieNames.some((name) => request.cookies.get(name)?.value)
     
     if (!hasSessionCookie) {
-      console.log('[MIDDLEWARE] No session cookie found, redirecting to login')
-      console.log('[MIDDLEWARE] Available cookies:', Array.from(request.cookies.getAll().map(c => c.name)))
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[MIDDLEWARE] No session cookie found, redirecting to login')
+        console.log('[MIDDLEWARE] Available cookies:', Array.from(request.cookies.getAll().map(c => c.name)))
+      }
       return NextResponse.redirect(new URL('/login', request.url))
     }
     
-    console.log('[MIDDLEWARE] Session cookie found, allowing access')
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[MIDDLEWARE] Session cookie found, allowing access')
+    }
   }
   
   return NextResponse.next()

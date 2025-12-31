@@ -17,10 +17,13 @@ export async function GET() {
 
     // Check database connection
     try {
-      await db.execute({ sql: "SELECT 1", args: [] })
-      checks.database = true
+      const result = await db.execute({ sql: "SELECT 1 as health", args: [] })
+      // Verify we got a valid response with rows
+      checks.database = !!(result && result.rows && result.rows.length > 0)
     } catch (error) {
-      console.error("Database health check failed:", error)
+      if (process.env.NODE_ENV === 'development') {
+        console.error("Database health check failed:", error)
+      }
       checks.database = false
     }
 
@@ -47,7 +50,9 @@ export async function GET() {
       { status: statusCode }
     )
   } catch (error) {
-    console.error("Health check error:", error)
+    if (process.env.NODE_ENV === 'development') {
+      console.error("Health check error:", error)
+    }
     return NextResponse.json(
       {
         status: "unhealthy",
