@@ -27,6 +27,8 @@ async function migrateFirmPasswords() {
   console.log("🔐 Starting law firm password migration...")
   console.log("=".repeat(50))
 
+  const APP_URL = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_BASE_URL || "https://bindme.co.uk"
+
   try {
     // Get all firms with password hashes
     const firms = await db.query.lawFirms.findMany({
@@ -99,7 +101,7 @@ async function migrateFirmPasswords() {
                     <p style="margin: 0 0 12px 0; color: #cbd5e1;">
                       Please visit the law firm login page and use the "Forgot Password" option to set a new password.
                     </p>
-                    <a href="https://bindme.co.uk/firm/login" style="display: inline-block; background: #3b82f6; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; margin: 12px 0;">
+                    <a href="${APP_URL}/firm/login" style="display: inline-block; background: #3b82f6; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; margin: 12px 0;">
                       Reset Password
                     </a>
                     <p style="margin: 12px 0 0 0; color: #94a3b8; font-size: 14px;">

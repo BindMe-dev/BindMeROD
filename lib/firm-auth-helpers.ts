@@ -129,7 +129,7 @@ export async function verifyPassword(
     }
     
     // Add artificial delay to prevent timing attacks
-    await bcrypt.compare("dummy", "$2b$10$dummy.hash.to.prevent.timing.attacks.xxxxxxxxxxxxxxxxxxxxxxxxxxx")
+    await bcrypt.compare("dummy", "$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy")
     return { valid: false, needsRehash: false }
   }
   
