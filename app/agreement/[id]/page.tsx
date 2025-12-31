@@ -35,7 +35,6 @@ import {
 import { cn } from "@/lib/utils"
 import { getStatusBadge } from "@/lib/agreement-actions"
 import { AgreementSignatureStatus } from "@/components/agreement-signature-status"
-import { AgreementActionButtons } from "@/components/agreement-action-buttons"
 import { AgreementLegalBoilerplate } from "@/components/agreement-legal-boilerplate"
 import { SmartActionPanel } from "@/components/smart-action-panel"
 import { AgreementDetailsBlock } from "@/components/agreement-details-block"
@@ -43,7 +42,6 @@ import { DisputeResolutionPanel } from "@/components/dispute-resolution-panel"
 import { AgreementChat } from "@/components/agreement-chat"
 import { EmailConfirmationPreview } from "@/components/email-confirmation-preview"
 import { CounterpartySignDialog } from "@/components/counterparty-sign-dialog"
-import { CreatorSignDialog } from "@/components/creator-sign-dialog"
 import { WitnessAgreementDialog } from "@/components/witness-agreement-dialog"
 import { CompletionCertificate } from "@/components/completion-certificate"
 import { AmendmentRequestPanel } from "@/components/amendment-request-panel"
@@ -70,19 +68,16 @@ export default function AgreementDetailsPage({ params }: { params: Promise<{ id:
   const [showCertificate, setShowCertificate] = useState(false)
   const contentRef = useRef<HTMLDivElement | null>(null)
   const counterpartySignTriggerId = `counterparty-sign-${resolvedParams.id}`
-  const creatorSignTriggerId = `creator-sign-${resolvedParams.id}`
   const openCounterpartySignDialog = useCallback(() => {
     document.getElementById(counterpartySignTriggerId)?.click()
   }, [counterpartySignTriggerId])
-  const openCreatorSignDialog = useCallback(() => {
-    document.getElementById(creatorSignTriggerId)?.click()
-  }, [creatorSignTriggerId])
 
-  const agreement = getAgreementById(resolvedParams.id)
+  const agreement = getAgreementById(resolvedParams.id) || null
   const permissions = useAgreementPermissions(
     agreement, 
     user?.id || "", 
-    user?.email || ""
+    user?.email || "",
+    (user as any)?.role === "admin" || false
   )
 
   // ALL HOOKS MUST BE DEFINED BEFORE ANY CONDITIONAL RETURNS
@@ -688,54 +683,7 @@ export default function AgreementDetailsPage({ params }: { params: Promise<{ id:
               {/* Primary actions surfaced at the top for quick access */}
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div className="flex flex-wrap gap-3">
-                  <AgreementActionButtons
-                    agreement={agreement}
-                    userContext={permissions.userContext}
-                    onDelete={handleDelete}
-                    onComplete={handleComplete}
-                    onSignAsCounterparty={handleCounterpartySign}
-                    onSignAsCreator={handleCreatorSign}
-                    onRejectCompletion={handleRejectCompletion}
-                    onRejectSignature={handleRejectSignature}
-                    onTriggerLegal={handleTriggerLegalResolution}
-                    onProposeFriendly={handleProposeFriendlyArrangement}
-                    onSendForSignature={handleSendForSignature}
-                    onCancel={handleCancel}
-                    onWithdraw={
-                      canWithdraw
-                        ? async () => {
-                            try {
-                              const res = await fetch(`/api/agreements/${resolvedParams.id}/withdraw`, {
-                                method: "POST",
-                                credentials: "include",
-                              })
-                              if (!res.ok) {
-                                const data = await res.json().catch(() => ({}))
-                                throw new Error(data.error || "Failed to withdraw")
-                              }
-                              await refreshAgreements()
-                            } catch (err) {
-                              alert(err instanceof Error ? err.message : "Failed to withdraw")
-                            }
-                          }
-                        : undefined
-                    }
-                    onDuplicate={async () => {
-                      try {
-                        const res = await fetch(`/api/agreements/${resolvedParams.id}/duplicate`, {
-                          method: "POST",
-                          credentials: "include",
-                        })
-                        if (!res.ok) throw new Error("Failed to duplicate")
-                        const data = await res.json()
-                        router.push(`/agreement/${data.id}`)
-                      } catch (err) {
-                        alert(err instanceof Error ? err.message : "Failed to duplicate")
-                      }
-                    }}
-                    counterpartySignTriggerId={counterpartySignTriggerId}
-                    creatorSignTriggerId={creatorSignTriggerId}
-                  />
+                  {/* Actions now handled by SmartActionPanel below */}
                 </div>
                 {/* Witness signing logic */}
                 {isDesignatedWitness && (
@@ -909,7 +857,7 @@ export default function AgreementDetailsPage({ params }: { params: Promise<{ id:
                   counterpartySignatures={counterpartySignatures}
                   onComplete={handleComplete}
                   onSignAsCounterparty={openCounterpartySignDialog}
-                  onSignAsCreator={openCreatorSignDialog}
+                  onSignAsCreator={handleCreatorSign}
                   onEdit={() => router.push(`/agreement/${resolvedParams.id}/edit`)}
                   onSendForSignature={async () => {
                     try {
@@ -977,7 +925,6 @@ export default function AgreementDetailsPage({ params }: { params: Promise<{ id:
                     document.getElementById('audit-log')?.scrollIntoView({ behavior: 'smooth' })
                   }}
                   counterpartySignTriggerId={counterpartySignTriggerId}
-                  creatorSignTriggerId={creatorSignTriggerId}
                   onWithdraw={
                     canWithdraw
                       ? async () => {

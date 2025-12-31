@@ -17,9 +17,9 @@ export function MobileBottomNav() {
 
   const navItems: NavItem[] = [
     { icon: Home, label: "Home", href: "/dashboard" },
-    { icon: FileText, label: "Agreements", href: "/agreements" },
+    { icon: FileText, label: "Create", href: "/create-agreement" },
     { icon: Calendar, label: "Calendar", href: "/calendar" },
-    { icon: Trophy, label: "Rewards", href: "/achievements" },
+    { icon: Trophy, label: "Rewards", href: "/statistics" },
     { icon: Settings, label: "More", href: "/settings" },
   ]
 
