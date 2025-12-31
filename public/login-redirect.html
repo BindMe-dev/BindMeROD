@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login Redirect Helper</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            background: #1e293b; 
+            color: white; 
+            text-align: center;
+        }
+        .container { 
+            max-width: 400px; 
+            margin: 50px auto; 
+            padding: 30px; 
+            background: #334155; 
+            border-radius: 10px; 
+        }
+        button { 
+            padding: 12px 24px; 
+            margin: 10px; 
+            background: #3b82f6; 
+            color: white; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            font-size: 16px;
+        }
+        button:hover { background: #2563eb; }
+        .status { 
+            margin: 15px 0; 
+            padding: 10px; 
+            border-radius: 5px; 
+        }
+        .success { background: #065f46; }
+        .error { background: #7f1d1d; }
+        .loading { background: #374151; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>BindMe Login Helper</h1>
+        <p>Use this page to login and get redirected to the dashboard properly.</p>
+        
+        <button onclick="loginAndRedirect()">Login & Go to Dashboard</button>
+        <br>
+        <button onclick="checkAuth()">Check Current Login Status</button>
+        <br>
+        <button onclick="goToDashboard()">Try Dashboard Direct</button>
+        
+        <div id="status"></div>
+    </div>
+
+    <script>
+        function setStatus(message, type = 'loading') {
+            const status = document.getElementById('status');
+            status.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        async function loginAndRedirect() {
+            setStatus('Logging in...', 'loading');
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        identifier: 'n.ouladsalah@gmail.com',
+                        password: 'MotherLand064861!'
+                    })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    setStatus(`❌ Login failed: ${error.error}`, 'error');
+                    return;
+                }
+                
+                const data = await response.json();
+                setStatus(`✅ Login successful for: ${data.user?.email}`, 'success');
+                
+                // Wait a moment for session to be fully set
+                setTimeout(() => {
+                    setStatus('Redirecting to dashboard...', 'loading');
+                    window.location.href = '/dashboard';
+                }, 1000);
+                
+            } catch (error) {
+                setStatus(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function checkAuth() {
+            setStatus('Checking authentication...', 'loading');
+            
+            try {
+                const response = await fetch('/api/auth/me', {
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (data.user) {
+                    setStatus(`✅ Logged in as: ${data.user.email}`, 'success');
+                } else {
+                    setStatus('❌ Not logged in', 'error');
+                }
+                
+            } catch (error) {
+                setStatus(`❌ Error checking auth: ${error.message}`, 'error');
+            }
+        }
+        
+        function goToDashboard() {
+            setStatus('Going to dashboard...', 'loading');
+            window.location.href = '/dashboard';
+        }
+        
+        // Auto-check auth status on page load
+        window.onload = checkAuth;
+    </script>
+</body>
+</html>

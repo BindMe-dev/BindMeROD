@@ -1,0 +1,48 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - DB_POOL_MIN=${DB_POOL_MIN:-2}
+      - DB_POOL_MAX=${DB_POOL_MAX:-10}
+      - DB_IDLE_TIMEOUT=${DB_IDLE_TIMEOUT:-30000}
+      - DB_CONNECT_TIMEOUT=${DB_CONNECT_TIMEOUT:-10000}
+    develop:
+      watch:
+        - action: sync
+          path: ./
+          target: /app
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: package.json
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+
+  # Optional local PostgreSQL (if you don't point to Supabase)
+  # db:
+  #   image: postgres:16
+  #   environment:
+  #     POSTGRES_USER: bindme
+  #     POSTGRES_PASSWORD: bindme
+  #     POSTGRES_DB: bindme
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - db-data:/var/lib/postgresql/data
+  #     - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U bindme"]
+  #     interval: 5s
+  #     timeout: 5s
+  #     retries: 5
+
+volumes:
+  db-data:
+

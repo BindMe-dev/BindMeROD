@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Direct Dashboard Access</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1e293b; color: white; }
+        button { padding: 10px 20px; margin: 10px; background: #3b82f6; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #2563eb; }
+        .result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background: #065f46; }
+        .error { background: #7f1d1d; }
+    </style>
+</head>
+<body>
+    <h1>Direct Dashboard Access</h1>
+    <p>Since you're stuck at login, let's log you in directly and redirect to dashboard:</p>
+    
+    <button onclick="loginAndRedirect()">Login & Go to Dashboard</button>
+    <button onclick="checkCurrentAuth()">Check Current Auth Status</button>
+    <button onclick="goToDashboard()">Go Directly to Dashboard</button>
+    
+    <div id="output"></div>
+
+    <script>
+        async function loginAndRedirect() {
+            const output = document.getElementById('output');
+            output.innerHTML = '<div class="result">Logging in...</div>';
+            
+            try {
+                // Login first
+                const loginResponse = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        identifier: 'n.ouladsalah@gmail.com',
+                        password: 'MotherLand064861!'
+                    })
+                });
+                
+                if (!loginResponse.ok) {
+                    const error = await loginResponse.json();
+                    output.innerHTML = '<div class="result error">❌ Login failed: ' + error.error + '</div>';
+                    return;
+                }
+                
+                const loginData = await loginResponse.json();
+                output.innerHTML = '<div class="result success">✅ Login successful for: ' + loginData.user?.email + '</div>';
+                
+                // Wait a moment then redirect
+                setTimeout(() => {
+                    output.innerHTML += '<div class="result">Redirecting to dashboard...</div>';
+                    window.location.href = '/dashboard';
+                }, 1000);
+                
+            } catch (error) {
+                output.innerHTML = '<div class="result error">❌ Error: ' + error.message + '</div>';
+            }
+        }
+        
+        async function checkCurrentAuth() {
+            const output = document.getElementById('output');
+            
+            try {
+                const meResponse = await fetch('/api/auth/me', {
+                    credentials: 'include'
+                });
+                
+                const meData = await meResponse.json();
+                
+                if (meData.user) {
+                    output.innerHTML = '<div class="result success">✅ Already logged in as: ' + meData.user.email + '</div>';
+                } else {
+                    output.innerHTML = '<div class="result error">❌ Not logged in</div>';
+                }
+                
+            } catch (error) {
+                output.innerHTML = '<div class="result error">❌ Error checking auth: ' + error.message + '</div>';
+            }
+        }
+        
+        function goToDashboard() {
+            const output = document.getElementById('output');
+            output.innerHTML = '<div class="result">Going to dashboard...</div>';
+            window.location.href = '/dashboard';
+        }
+    </script>
+</body>
+</html>

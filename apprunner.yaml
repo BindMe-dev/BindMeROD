@@ -1,0 +1,33 @@
+version: 1.0
+runtime: nodejs20
+build:
+  commands:
+    build:
+      - echo "Installing dependencies"
+      - npm ci
+      - echo "Building application"
+      - npm run build
+run:
+  runtime-version: 20
+  command: npm start
+  network:
+    port: 3000
+  env:
+    - name: NODE_ENV
+      value: production
+    - name: DATABASE_URL
+      value: postgresql://bindme:BindMe2024!@bindme-db.ENDPOINT.eu-north-1.rds.amazonaws.com:5432/bindme
+    - name: JWT_SECRET
+      value: prod-secret-change-me-in-production
+    - name: PUSHER_APP_ID
+      value: "2093286"
+    - name: PUSHER_KEY
+      value: "bb02897e2435da5e9ba5"
+    - name: PUSHER_SECRET
+      value: "2c5300036f04ed8c3f4c"
+    - name: PUSHER_CLUSTER
+      value: "eu"
+    - name: NEXT_PUBLIC_PUSHER_KEY
+      value: "bb02897e2435da5e9ba5"
+    - name: NEXT_PUBLIC_PUSHER_CLUSTER
+      value: "eu"

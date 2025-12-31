@@ -1,0 +1,8 @@
+# Stop everything
+docker-compose down
+
+# Start database first
+docker-compose up db -d
+
+# Wait a moment, then start the app
+docker-compose up app
