@@ -42,11 +42,11 @@ export default function RootLayout({
               <AchievementProvider>
                 <NotificationProvider>
                   <AgreementProvider>
-                    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+                    <Suspense fallback={<div className="h-14 sm:h-18 bg-slate-900/80 backdrop-blur-sm border-b border-slate-800" />}>
                       <GlobalTopNav />
                     </Suspense>
                     <div className="pt-14 sm:pt-18 pb-20 md:pb-0">
-                      <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+                      <Suspense fallback={<div className="flex items-center justify-center p-8"><div className="text-slate-400">Loading...</div></div>}>
                         {children}
                       </Suspense>
                     </div>
