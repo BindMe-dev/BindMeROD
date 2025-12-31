@@ -8,12 +8,14 @@ import { db } from "@/lib/db"
 import { lawFirms } from "@/lib/db/schema"
 import { eq } from "drizzle-orm"
 import { SignJWT, jwtVerify } from "jose"
+import bcrypt from "bcryptjs"
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || "your-secret-key-change-in-production"
 )
 
 const FIRM_TOKEN_COOKIE = "firm_auth_token"
+const BCRYPT_ROUNDS = 12
 
 /**
  * Generate JWT token for law firm
@@ -82,25 +84,56 @@ export async function getAuthenticatedFirm(request: NextRequest) {
 }
 
 /**
- * Hash password (simple implementation - use bcrypt in production)
+ * Detect if a hash is SHA-256 (legacy) or bcrypt (current)
  */
-export async function hashPassword(password: string): Promise<string> {
-  // TODO: Use bcrypt or argon2 in production
-  // For now, using a simple hash (NOT SECURE FOR PRODUCTION)
+function isLegacySHA256Hash(hash: string): boolean {
+  // SHA-256 produces 64 character hex strings
+  return /^[a-f0-9]{64}$/i.test(hash)
+}
+
+/**
+ * Legacy SHA-256 hash for comparison only (DO NOT USE FOR NEW PASSWORDS)
+ */
+async function legacySHA256Hash(password: string): Promise<string> {
   const encoder = new TextEncoder()
   const data = encoder.encode(password)
   const hashBuffer = await crypto.subtle.digest("SHA-256", data)
   const hashArray = Array.from(new Uint8Array(hashBuffer))
-  const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("")
-  return hashHex
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("")
 }
 
 /**
- * Verify password
+ * Hash password using bcrypt (SECURE)
  */
-export async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  const passwordHash = await hashPassword(password)
-  return passwordHash === hash
+export async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, BCRYPT_ROUNDS)
+}
+
+/**
+ * Verify password with auto-migration from SHA-256 to bcrypt
+ * Returns { valid: boolean, needsRehash: boolean, newHash?: string }
+ */
+export async function verifyPassword(
+  password: string, 
+  hash: string
+): Promise<{ valid: boolean; needsRehash: boolean; newHash?: string }> {
+  // Check if this is a legacy SHA-256 hash
+  if (isLegacySHA256Hash(hash)) {
+    const legacyHash = await legacySHA256Hash(password)
+    const valid = legacyHash === hash
+    
+    if (valid) {
+      // Password is correct - generate new bcrypt hash for migration
+      const newHash = await hashPassword(password)
+      return { valid: true, needsRehash: true, newHash }
+    }
+    
+    return { valid: false, needsRehash: false }
+  }
+  
+  // Modern bcrypt verification
+  const valid = await bcrypt.compare(password, hash)
+  return { valid, needsRehash: false }
 }
 
 /**
