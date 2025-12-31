@@ -25,7 +25,7 @@ function isBcryptHash(hash: string): boolean {
 
 async function migrateFirmPasswords() {
   console.log("🔐 Starting law firm password migration...")
-  console.log("=" .repeat(50))
+  console.log("=".repeat(50))
 
   try {
     // Get all firms with password hashes

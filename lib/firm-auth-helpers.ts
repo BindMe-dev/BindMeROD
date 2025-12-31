@@ -8,6 +8,7 @@ import { db } from "@/lib/db"
 import { lawFirms } from "@/lib/db/schema"
 import { eq } from "drizzle-orm"
 import { SignJWT, jwtVerify } from "jose"
+import { hashPassword as hashPasswordSecure } from "@/lib/security/password-security"
 import bcrypt from "bcryptjs"
 
 const JWT_SECRET = new TextEncoder().encode(
@@ -15,7 +16,6 @@ const JWT_SECRET = new TextEncoder().encode(
 )
 
 const FIRM_TOKEN_COOKIE = "firm_auth_token"
-const BCRYPT_ROUNDS = 12
 
 /**
  * Generate JWT token for law firm
@@ -106,7 +106,7 @@ async function legacySHA256Hash(password: string): Promise<string> {
  * Hash password using bcrypt (SECURE)
  */
 export async function hashPassword(password: string): Promise<string> {
-  return bcrypt.hash(password, BCRYPT_ROUNDS)
+  return hashPasswordSecure(password)
 }
 
 /**
@@ -128,6 +128,8 @@ export async function verifyPassword(
       return { valid: true, needsRehash: true, newHash }
     }
     
+    // Add artificial delay to prevent timing attacks
+    await bcrypt.compare("dummy", "$2b$10$dummy.hash.to.prevent.timing.attacks.xxxxxxxxxxxxxxxxxxxxxxxxxxx")
     return { valid: false, needsRehash: false }
   }
   
