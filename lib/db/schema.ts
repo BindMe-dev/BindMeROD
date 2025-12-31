@@ -1107,3 +1107,32 @@ export const actionPermissions = pgTable(
     ),
   })
 )
+
+// Agreement comments for clause-level discussions
+export const agreementComments = pgTable(
+  "AgreementComment",
+  {
+    id: text("id").primaryKey(),
+    agreementId: text("agreementId")
+      .notNull()
+      .references(() => agreements.id, { onDelete: "cascade", onUpdate: "cascade" }),
+    userId: text("userId")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade", onUpdate: "cascade" }),
+    clauseId: text("clauseId"), // Which section/clause of the agreement
+    content: text("content").notNull(),
+    parentId: text("parentId"), // For replies/threads
+    resolved: boolean("resolved").default(false),
+    resolvedBy: text("resolvedBy").references(() => users.id, { onDelete: "set null", onUpdate: "cascade" }),
+    resolvedAt: timestamp("resolvedAt", { withTimezone: false }),
+    mentions: text("mentions").array().default(sql`ARRAY[]::TEXT[]`), // Array of user IDs mentioned
+    createdAt: timestamp("createdAt", { withTimezone: false }).defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt", { withTimezone: false }),
+  },
+  (table) => ({
+    agreementIdx: index("AgreementComment_agreementId_idx").on(table.agreementId),
+    userIdx: index("AgreementComment_userId_idx").on(table.userId),
+    parentIdx: index("AgreementComment_parentId_idx").on(table.parentId),
+  })
+)
+)
