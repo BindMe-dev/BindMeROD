@@ -13,6 +13,11 @@ if (!connectionString) {
   throw new Error("DATABASE_URL is not set")
 }
 
+// Detect if using Supabase or other cloud providers
+const isCloudDatabase = connectionString.includes('supabase.co') || 
+                        connectionString.includes('neon.tech') || 
+                        connectionString.includes('railway.app')
+
 // Connection pool configuration
 const poolConfig = {
   connectionString,
@@ -23,10 +28,10 @@ const poolConfig = {
   maxUses: parseInt(process.env.DB_MAX_USES || '7500'), // Max uses per connection
   allowExitOnIdle: process.env.NODE_ENV !== 'production',
   
-  // SSL configuration for production
-  ssl: process.env.NODE_ENV === 'production' ? {
-    rejectUnauthorized: false // For managed databases like Supabase
-  } : false,
+  // SSL configuration - always enabled for Supabase connections
+  ssl: connectionString.includes('supabase.co') ? {
+    rejectUnauthorized: false // Required for Supabase in all environments
+  } : (isCloudDatabase ? { rejectUnauthorized: false } : false),
   
   // Query timeout
   query_timeout: parseInt(process.env.DB_QUERY_TIMEOUT || '30000'), // 30 seconds
