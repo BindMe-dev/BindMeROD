@@ -47,10 +47,9 @@ export function WithdrawDialog({ agreementId, onWithdraw, triggerId }: WithdrawD
         <Button
           id={triggerId}
           variant="outline"
-          size="sm"
-          className="gap-2 border-amber-500/30 text-amber-300 hover:bg-amber-500/10"
+          className="gap-2 border-amber-500/30 text-amber-300 hover:bg-amber-500/10 py-3 px-4 min-h-[44px]"
         >
-          <Ban className="w-4 h-4" />
+          <Ban className="w-5 h-5" />
           Withdraw Offer
         </Button>
       </AlertDialogTrigger>

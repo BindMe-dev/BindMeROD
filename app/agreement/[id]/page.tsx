@@ -649,12 +649,11 @@ export default function AgreementDetailsPage({ params }: { params: Promise<{ id:
                 <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-between sm:justify-end">
                   <Button
                     variant="outline"
-                    size="sm"
-                    className="w-full sm:w-auto gap-2 bg-slate-800/50 border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white transition-all duration-300"
+                    className="w-full sm:w-auto gap-2 bg-slate-800/50 border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white transition-all duration-300 py-3 sm:py-2"
                     onClick={handleDownloadPdf}
                     disabled={isDownloading}
                   >
-                    <FileText className="w-4 h-4" />
+                    <FileText className="w-5 h-5 sm:w-4 sm:h-4" />
                     {isDownloading ? "Preparing PDF..." : "Download PDF"}
                   </Button>
                   {!isWitnessOnly && canSignAsCounterparty && (
@@ -927,11 +926,13 @@ export default function AgreementDetailsPage({ params }: { params: Promise<{ id:
                   counterpartySignTriggerId={counterpartySignTriggerId}
                   onWithdraw={
                     canWithdraw
-                      ? async () => {
+                      ? async (reason?: string) => {
                           try {
                             const res = await fetch(`/api/agreements/${resolvedParams.id}/withdraw`, {
                               method: "POST",
                               credentials: "include",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ reason })
                             })
                             if (!res.ok) {
                               const data = await res.json().catch(() => ({}))
@@ -944,6 +945,70 @@ export default function AgreementDetailsPage({ params }: { params: Promise<{ id:
                         }
                       : undefined
                   }
+                  onDelete={async () => {
+                    if (!confirm("Are you sure you want to permanently delete this agreement?")) return
+                    await handleDelete()
+                  }}
+                  onTerminate={async (reason: string) => {
+                    try {
+                      const res = await fetch(`/api/agreements/${resolvedParams.id}/terminate`, {
+                        method: "POST",
+                        credentials: "include",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ reason })
+                      })
+                      if (!res.ok) {
+                        const data = await res.json().catch(() => ({}))
+                        throw new Error(data.error || "Failed to terminate")
+                      }
+                      await refreshAgreements()
+                    } catch (err) {
+                      alert(err instanceof Error ? err.message : "Failed to terminate")
+                    }
+                  }}
+                  onReportBreach={async (description: string, evidence?: File[]) => {
+                    try {
+                      const formData = new FormData()
+                      formData.append("description", description)
+                      if (evidence) {
+                        evidence.forEach(file => formData.append("evidence", file))
+                      }
+                      const res = await fetch(`/api/agreements/${resolvedParams.id}/breach`, {
+                        method: "POST",
+                        credentials: "include",
+                        body: formData
+                      })
+                      if (!res.ok) {
+                        const data = await res.json().catch(() => ({}))
+                        throw new Error(data.error || "Failed to report breach")
+                      }
+                      await refreshAgreements()
+                    } catch (err) {
+                      alert(err instanceof Error ? err.message : "Failed to report breach")
+                    }
+                  }}
+                  onRespondToBreach={async (responseType: string, message: string, evidence?: File[]) => {
+                    try {
+                      const formData = new FormData()
+                      formData.append("responseType", responseType)
+                      formData.append("message", message)
+                      if (evidence) {
+                        evidence.forEach(file => formData.append("evidence", file))
+                      }
+                      const res = await fetch(`/api/agreements/${resolvedParams.id}/breach-response`, {
+                        method: "POST",
+                        credentials: "include",
+                        body: formData
+                      })
+                      if (!res.ok) {
+                        const data = await res.json().catch(() => ({}))
+                        throw new Error(data.error || "Failed to respond to breach")
+                      }
+                      await refreshAgreements()
+                    } catch (err) {
+                      alert(err instanceof Error ? err.message : "Failed to respond to breach")
+                    }
+                  }}
                 />
 
                 <div className="flex gap-3 pt-4 flex-wrap">

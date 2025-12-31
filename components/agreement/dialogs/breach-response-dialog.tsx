@@ -72,10 +72,9 @@ export function BreachResponseDialog({
         <Button
           id={triggerId}
           variant="outline"
-          size="sm"
-          className="gap-2 border-blue-500/30 text-blue-300 hover:bg-blue-500/10"
+          className="gap-2 border-blue-500/30 text-blue-300 hover:bg-blue-500/10 py-3 px-4 min-h-[44px]"
         >
-          <MessageSquare className="w-4 h-4" />
+          <MessageSquare className="w-5 h-5" />
           Respond to Breach
         </Button>
       </DialogTrigger>

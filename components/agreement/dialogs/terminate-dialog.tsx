@@ -52,10 +52,9 @@ export function TerminateDialog({ agreementId, onTerminate, triggerId }: Termina
         <Button
           id={triggerId}
           variant="destructive"
-          size="sm"
-          className="gap-2"
+          className="gap-2 py-3 px-4 min-h-[44px]"
         >
-          <XCircle className="w-4 h-4" />
+          <XCircle className="w-5 h-5" />
           Terminate Agreement
         </Button>
       </AlertDialogTrigger>

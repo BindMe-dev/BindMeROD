@@ -59,10 +59,9 @@ export function BreachReportDialog({ agreementId, onReport, triggerId }: BreachR
         <Button
           id={triggerId}
           variant="outline"
-          size="sm"
-          className="gap-2 border-red-500/30 text-red-300 hover:bg-red-500/10"
+          className="gap-2 border-red-500/30 text-red-300 hover:bg-red-500/10 py-3 px-4 min-h-[44px]"
         >
-          <AlertTriangle className="w-4 h-4" />
+          <AlertTriangle className="w-5 h-5" />
           Report Breach
         </Button>
       </DialogTrigger>
