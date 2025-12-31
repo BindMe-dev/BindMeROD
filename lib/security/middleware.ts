@@ -87,14 +87,15 @@ export async function requireSecureAuth(request: NextRequest): Promise<{ userId:
   return { userId, user }
 }
 
-// CSRF protection middleware - DISABLED FOR DEVELOPMENT
+// CSRF protection middleware
 export async function requireCSRF(request: NextRequest): Promise<void> {
-  // CSRF protection disabled - return early
-  console.log(`[DEV] CSRF protection disabled for ${getClientIP(request)}`)
-  return
-  
-  // Skip CSRF for GET requests
+  // Skip CSRF for GET requests (they should be idempotent)
   if (request.method === 'GET') {
+    return
+  }
+  
+  // Allow disabling ONLY in development with explicit env var
+  if (process.env.NODE_ENV === 'development' && process.env.DISABLE_CSRF === 'true') {
     return
   }
   

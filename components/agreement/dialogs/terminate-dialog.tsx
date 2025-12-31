@@ -5,102 +5,78 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { XCircle, Loader2, AlertTriangle } from "lucide-react"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { XCircle } from "lucide-react"
 
 interface TerminateDialogProps {
   agreementId: string
-  agreementTitle: string
-  onSuccess?: () => void
-  trigger?: React.ReactNode
+  onTerminate: (reason: string) => Promise<void>
+  triggerId?: string
 }
 
-export function TerminateDialog({ 
-  agreementId, 
-  agreementTitle, 
-  onSuccess,
-  trigger 
-}: TerminateDialogProps) {
+export function TerminateDialog({ agreementId, onTerminate, triggerId }: TerminateDialogProps) {
   const [open, setOpen] = useState(false)
   const [reason, setReason] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState("")
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
+  const handleSubmit = async () => {
     if (!reason.trim()) {
       setError("Please provide a reason for termination")
       return
     }
-
+    
+    setError("")
     setIsSubmitting(true)
-    setError(null)
-
     try {
-      const res = await fetch(`/api/agreements/${agreementId}/terminate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          reason: reason.trim(),
-        }),
-      })
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        throw new Error(data.error || "Failed to terminate agreement")
-      }
-
+      await onTerminate(reason.trim())
       setOpen(false)
       setReason("")
-      onSuccess?.()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to terminate agreement")
+    } catch (error) {
+      console.error("Terminate failed:", error)
+      setError(error instanceof Error ? error.message : "Failed to terminate agreement")
     } finally {
       setIsSubmitting(false)
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || (
-          <Button variant="destructive" className="gap-2">
-            <XCircle className="w-4 h-4" />
-            Terminate Agreement
-          </Button>
-        )}
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-lg bg-slate-950 border-slate-800 text-slate-100">
-        <DialogHeader>
-          <DialogTitle className="text-white">Terminate Agreement</DialogTitle>
-          <DialogDescription className="text-slate-400">
-            Terminate the active agreement "{agreementTitle}". This action will change the status to CANCELLED.
-          </DialogDescription>
-        </DialogHeader>
+    <AlertDialog open={open} onOpenChange={setOpen}>
+      <AlertDialogTrigger asChild>
+        <Button
+          id={triggerId}
+          variant="destructive"
+          className="gap-2 py-3 px-4 min-h-[44px]"
+        >
+          <XCircle className="w-5 h-5" />
+          Terminate Agreement
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent className="sm:max-w-lg bg-slate-950 border-slate-800 text-slate-100">
+        <AlertDialogHeader>
+          <AlertDialogTitle className="text-white">Terminate Agreement</AlertDialogTitle>
+          <AlertDialogDescription className="text-slate-400">
+            This will permanently terminate the active agreement. Both parties will be notified.
+            This action cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <Alert className="bg-red-950/50 border-red-900">
-            <AlertTriangle className="h-4 w-4 text-red-400" />
-            <AlertDescription className="text-red-200">
-              <strong>Warning:</strong> This will terminate the active agreement. This action cannot be undone.
-            </AlertDescription>
-          </Alert>
-
+        <div className="space-y-4 py-4">
           {error && (
-            <Alert variant="destructive" className="bg-red-950/50 border-red-900">
-              <AlertDescription className="text-red-200">{error}</AlertDescription>
-            </Alert>
+            <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+              <p className="text-sm text-red-300">{error}</p>
+            </div>
           )}
-
+          
           <div className="space-y-2">
             <Label htmlFor="reason" className="text-sm text-slate-200">
               Reason for Termination *
@@ -109,43 +85,29 @@ export function TerminateDialog({
               id="reason"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="Explain why you're terminating this agreement..."
-              rows={4}
-              className="bg-slate-900 border-slate-800 text-slate-100 placeholder:text-slate-500"
+              placeholder="Explain why you are terminating this agreement..."
+              className="bg-slate-900/50 border-slate-700 text-slate-100 placeholder:text-slate-500 min-h-[120px]"
               required
             />
-            <p className="text-xs text-slate-400">
-              Both parties will be notified and the termination will be recorded in the audit log.
+            <p className="text-xs text-slate-500">
+              This reason will be recorded in the agreement audit log.
             </p>
           </div>
-          
-          <div className="flex gap-3 pt-1">
-            <Button 
-              type="submit"
-              disabled={!reason.trim() || isSubmitting}
-              className="flex-1 bg-red-600 hover:bg-red-700 text-white"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Terminating...
-                </>
-              ) : (
-                "Terminate Agreement"
-              )}
-            </Button>
-            <Button 
-              type="button"
-              variant="outline" 
-              onClick={() => setOpen(false)} 
-              className="border-slate-700 text-slate-200"
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+        </div>
+
+        <AlertDialogFooter>
+          <AlertDialogCancel className="bg-slate-800 text-slate-100 hover:bg-slate-700 border-slate-700">
+            Cancel
+          </AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleSubmit}
+            disabled={isSubmitting || !reason.trim()}
+            className="bg-red-600 text-white hover:bg-red-700"
+          >
+            {isSubmitting ? "Terminating..." : "Terminate Agreement"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   )
 }

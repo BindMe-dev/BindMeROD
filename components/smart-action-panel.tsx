@@ -19,21 +19,19 @@ import {
   Target,
   Activity,
   Scale,
-  Edit3,
-  Send,
   Ban,
   XCircle,
-  Copy,
-  Download,
-  Eye,
-  MessageSquare,
-  RefreshCw,
+  Trash2,
+  Edit3,
+  Send
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { Agreement } from "@/lib/agreement-types"
 import { type AvailableActions } from "@/lib/agreement-actions"
-import { WithdrawDialog, TerminateDialog, BreachReportDialog, BreachResponseDialog } from "@/components/agreement/dialogs"
-import { AmendmentRequestDialog } from "@/components/amendment-request-dialog"
+import { WithdrawDialog } from "@/components/agreement/dialogs/withdraw-dialog"
+import { TerminateDialog } from "@/components/agreement/dialogs/terminate-dialog"
+import { BreachReportDialog } from "@/components/agreement/dialogs/breach-report-dialog"
+import { BreachResponseDialog } from "@/components/agreement/dialogs/breach-response-dialog"
 
 interface SmartActionPanelProps {
   agreement: Agreement
@@ -55,10 +53,10 @@ interface SmartActionPanelProps {
   onDuplicate?: () => void
   onViewAudit?: () => void
   onDelete?: () => void
-  onResend?: () => void
-  onRefresh?: () => void
+  onTerminate?: (reason: string) => Promise<void>
+  onReportBreach?: (description: string, evidence?: File[]) => Promise<void>
+  onRespondToBreach?: (responseType: string, message: string, evidence?: File[]) => Promise<void>
   counterpartySignTriggerId?: string
-  creatorSignTriggerId?: string
 }
 
 export function SmartActionPanel({
@@ -81,10 +79,10 @@ export function SmartActionPanel({
   onDuplicate,
   onViewAudit,
   onDelete,
-  onResend,
-  onRefresh,
+  onTerminate,
+  onReportBreach,
+  onRespondToBreach,
   counterpartySignTriggerId,
-  creatorSignTriggerId,
 }: SmartActionPanelProps) {
   const [isExpanded, setIsExpanded] = useState(true)
 
@@ -354,10 +352,86 @@ export function SmartActionPanel({
       })
     }
 
-    // DANGER ACTIONS
+    // Delete (hard delete for drafts)
+    if (actions.canDelete && onDelete) {
+      recommendations.push({
+        type: "danger",
+        title: "Delete Agreement",
+        description: "Permanently delete this draft agreement",
+        action: "Delete",
+        icon: Trash2,
+        handler: onDelete
+      })
+    }
 
-    // Withdraw offer (use dialog component)
-    if (actions.canWithdrawOffer) {
+    // Terminate active agreement
+    if (actions.canTerminateAgreement && onTerminate) {
+      recommendations.push({
+        type: "danger",
+        title: "Terminate Agreement",
+        description: "End this active agreement",
+        action: "Terminate",
+        icon: XCircle,
+        handler: () => {
+          document.getElementById(`terminate-trigger-${agreement.id}`)?.click()
+        }
+      })
+    }
+
+    // Withdraw offer (before counterparty signs)
+    if (actions.canWithdrawOffer && onWithdraw) {
+      recommendations.push({
+        type: "warning",
+        title: "Withdraw Offer",
+        description: "Cancel this offer before counterparty signs",
+        action: "Withdraw",
+        icon: Ban,
+        handler: () => {
+          document.getElementById(`withdraw-trigger-${agreement.id}`)?.click()
+        }
+      })
+    }
+
+    // Request amendment
+    if (actions.canRequestAmendment && onWorkflowAction) {
+      recommendations.push({
+        type: "action",
+        title: "Request Amendment",
+        description: "Propose changes to the active agreement",
+        action: "Request Changes",
+        icon: Edit3,
+        handler: () => onWorkflowAction("REQUEST_AMENDMENT")
+      })
+    }
+
+    // Report breach
+    if (actions.canReportBreach && onReportBreach) {
+      recommendations.push({
+        type: "warning",
+        title: "Report Breach",
+        description: "Report a violation of agreement terms",
+        action: "Report",
+        icon: AlertTriangle,
+        handler: () => {
+          document.getElementById(`breach-report-trigger-${agreement.id}`)?.click()
+        }
+      })
+    }
+
+    // Resend reminder
+    if (actions.canResend && onWorkflowAction) {
+      recommendations.push({
+        type: "action",
+        title: "Resend Reminder",
+        description: "Send a reminder to the counterparty",
+        action: "Resend",
+        icon: Send,
+        handler: () => onWorkflowAction("RESEND_REMINDER")
+      })
+    }
+
+    // Withdraw (legacy - keeping for backwards compatibility)
+    if (isCreator && counterpartySignatures.length === 0 && onWithdraw && agreement.status !== "withdrawn" && !actions.canWithdrawOffer) {
       recommendations.push({
         type: "action",
         title: "Withdraw Offer",
@@ -717,6 +791,42 @@ export function SmartActionPanel({
           </div>
         </div>
       </CardContent>
+
+      {/* Dialog Components - Conditionally rendered */}
+      {actions.canWithdrawOffer && onWithdraw && (
+        <WithdrawDialog
+          agreementId={agreement.id}
+          onWithdraw={onWithdraw}
+          triggerId={`withdraw-trigger-${agreement.id}`}
+        />
+      )}
+
+      {actions.canTerminateAgreement && onTerminate && (
+        <TerminateDialog
+          agreementId={agreement.id}
+          onTerminate={onTerminate}
+          triggerId={`terminate-trigger-${agreement.id}`}
+        />
+      )}
+
+      {actions.canReportBreach && onReportBreach && (
+        <BreachReportDialog
+          agreementId={agreement.id}
+          onReport={onReportBreach}
+          triggerId={`breach-report-trigger-${agreement.id}`}
+        />
+      )}
+
+      {onRespondToBreach && (
+        <BreachResponseDialog
+          agreementId={agreement.id}
+          breachId={agreement.id}
+          onRespond={async (responseType, message, evidence) => {
+            await onRespondToBreach(responseType, message, evidence)
+          }}
+          triggerId={`breach-response-trigger-${agreement.id}`}
+        />
+      )}
     </Card>
   )
 }

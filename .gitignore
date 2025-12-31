@@ -30,3 +30,9 @@ next-env.d.ts
 
 .vercel
 .env*.local
+
+# SSH keys and sensitive files
+*.pem
+*.key
+*_ssh_key*
+hostinger*
