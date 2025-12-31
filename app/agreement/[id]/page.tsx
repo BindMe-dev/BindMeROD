@@ -679,14 +679,9 @@ export default function AgreementDetailsPage({ params }: { params: Promise<{ id:
               </div>
             </CardHeader>
             <CardContent className="space-y-8 relative p-4 sm:p-6">
-              {/* Primary actions surfaced at the top for quick access */}
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <div className="flex flex-wrap gap-3">
-                  {/* Actions now handled by SmartActionPanel below */}
-                </div>
-                {/* Witness signing logic */}
-                {isDesignatedWitness && (
-                  <div className="flex items-center gap-2">
+              {/* Witness signing logic */}
+              {isDesignatedWitness && (
+                <div className="flex items-center gap-2">
                     {canWitnessSign ? (
                       <WitnessAgreementDialog agreement={agreement} onWitnessed={refreshAgreements} />
                     ) : (
@@ -702,7 +697,6 @@ export default function AgreementDetailsPage({ params }: { params: Promise<{ id:
                     )}
                   </div>
                 )}
-              </div>
 
               {/* Enhanced Information Grid */}
               <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -1021,6 +1015,23 @@ export default function AgreementDetailsPage({ params }: { params: Promise<{ id:
           <AgreementChat agreementId={resolvedParams.id} />
         </div>
       </main>
+
+      {/* Hidden trigger buttons for dialog activation */}
+      <div className="hidden">
+        {/* Counterparty Sign Dialog Trigger */}
+        <CounterpartySignDialog 
+          agreement={agreement} 
+          onSign={handleCounterpartySign}
+          triggerId={counterpartySignTriggerId}
+        />
+        {/* Creator Sign Dialog Trigger */}
+        <CounterpartySignDialog 
+          agreement={agreement} 
+          role="creator"
+          onSign={handleCreatorSign}
+          triggerId={creatorSignTriggerId}
+        />
+      </div>
 
       {/* Completion Certificate Modal */}
       {showCertificate && agreement && user && (

@@ -128,31 +128,41 @@ export function SmartActionPanel({
   const getRecommendations = () => {
     const recommendations = []
 
-    // Edit action
-    if (actions.canEdit && onEdit) {
-      recommendations.push({
-        type: "action",
-        title: "Edit Agreement",
-        description: "Make changes to the agreement draft",
-        action: "Edit",
-        icon: FileText,
-        handler: onEdit
-      })
-    }
-
-    // Send for signature
+    // PRIMARY ACTIONS (most important, shown first)
+    
+    // Send for signature (DRAFT -> PENDING_SIGNATURE)
     if (actions.canSendForSignature && onSendForSignature) {
       recommendations.push({
         type: "urgent",
         title: "Send for Signature",
         description: "Send this agreement to counterparty for signing",
         action: "Send",
-        icon: Users,
-        handler: onSendForSignature
+        icon: Send,
+        handler: onSendForSignature,
+        group: "primary"
       })
     }
 
-    // Creator sign
+    // Counterparty sign (PENDING_SIGNATURE -> ACTIVE)
+    if (actions.canSign) {
+      recommendations.push({
+        type: "urgent",
+        title: "Sign Agreement",
+        description: "Review and sign this agreement to make it active",
+        action: "Sign Now",
+        icon: Shield,
+        handler: () => {
+          if (counterpartySignTriggerId) {
+            document.getElementById(counterpartySignTriggerId)?.click()
+          } else {
+            onSignAsCounterparty()
+          }
+        },
+        group: "primary"
+      })
+    }
+
+    // Creator sign (ACTIVE, but creator hasn't signed yet)
     if (actions.canCreatorSign && onSignAsCreator) {
       recommendations.push({
         type: "action",
@@ -166,25 +176,114 @@ export function SmartActionPanel({
           } else if (onSignAsCreator) {
             onSignAsCreator()
           }
-        }
+        },
+        group: "primary"
       })
     }
 
-    // Counterparty sign
-    if (actions.canSign) {
+    // Request completion (ACTIVE -> PENDING_COMPLETION)
+    if (actions.canRequestCompletion) {
+      recommendations.push({
+        type: "success",
+        title: "Request Completion",
+        description: "Mark this agreement as completed",
+        action: "Complete",
+        icon: CheckCircle,
+        handler: onComplete,
+        group: "primary"
+      })
+    }
+
+    // Confirm completion (PENDING_COMPLETION -> COMPLETED)
+    if (actions.canConfirmCompletion) {
+      recommendations.push({
+        type: "confirm",
+        title: "Confirm Completion",
+        description: "The other party has requested completion",
+        action: "Confirm",
+        icon: CheckCircle,
+        handler: onComplete,
+        group: "primary"
+      })
+    }
+
+    // SECONDARY ACTIONS
+
+    // Edit draft
+    if (actions.canEdit && onEdit) {
       recommendations.push({
         type: "action",
-        title: "Sign Agreement",
-        description: "Review and sign this agreement to make it active",
-        action: "Sign Now",
-        icon: Shield,
-        handler: () => {
-          if (counterpartySignTriggerId) {
-            document.getElementById(counterpartySignTriggerId)?.click()
-          } else {
-            onSignAsCounterparty()
-          }
-        }
+        title: "Edit Agreement",
+        description: "Make changes to the agreement draft",
+        action: "Edit",
+        icon: Edit3,
+        handler: onEdit,
+        group: "secondary"
+      })
+    }
+
+    // Resend
+    if (actions.canResend && onResend) {
+      recommendations.push({
+        type: "action",
+        title: "Resend to Counterparty",
+        description: "Send reminder to sign this agreement",
+        action: "Resend",
+        icon: RefreshCw,
+        handler: onResend,
+        group: "secondary"
+      })
+    }
+
+    // Request amendment (use dialog component)
+    if (actions.canRequestAmendment) {
+      recommendations.push({
+        type: "action",
+        title: "Request Amendment",
+        description: "Request changes to this active agreement",
+        action: "Request Changes",
+        icon: MessageSquare,
+        handler: () => {}, // Dialog handles this
+        group: "secondary",
+        customComponent: (
+          <AmendmentRequestDialog
+            key="amendment-dialog"
+            agreementId={agreement.id}
+            agreementTitle={agreement.title}
+            onSuccess={onRefresh}
+            trigger={
+              <Button size="sm" variant="outline" className="text-xs font-medium bg-blue-600 hover:bg-blue-700">
+                Request Changes
+              </Button>
+            }
+          />
+        )
+      })
+    }
+
+    // Report breach (use dialog component)
+    if (actions.canReportBreach) {
+      recommendations.push({
+        type: "action",
+        title: "Report Breach",
+        description: "Report a violation of agreement terms",
+        action: "Report Breach",
+        icon: AlertTriangle,
+        handler: () => {}, // Dialog handles this
+        group: "secondary",
+        customComponent: (
+          <BreachReportDialog
+            key="breach-report-dialog"
+            agreementId={agreement.id}
+            agreementTitle={agreement.title}
+            onSuccess={onRefresh}
+            trigger={
+              <Button size="sm" variant="outline" className="text-xs font-medium border-red-500/30 text-red-300 hover:bg-red-500/10">
+                Report Breach
+              </Button>
+            }
+          />
+        )
       })
     }
 
@@ -195,44 +294,9 @@ export function SmartActionPanel({
         title: "Reject Agreement",
         description: "Reject this agreement and request changes",
         action: "Reject",
-        icon: AlertTriangle,
-        handler: onReject
-      })
-    }
-
-    // Cancel agreement
-    if (actions.canCancel && onCancel) {
-      recommendations.push({
-        type: "action",
-        title: "Cancel Agreement",
-        description: "Cancel this agreement before counterparty signs",
-        action: "Cancel",
-        icon: AlertTriangle,
-        handler: onCancel
-      })
-    }
-
-    // Request completion
-    if (actions.canRequestCompletion) {
-      recommendations.push({
-        type: "success",
-        title: "Request Completion",
-        description: "Mark this agreement as completed",
-        action: "Complete",
-        icon: CheckCircle,
-        handler: onComplete
-      })
-    }
-
-    // Confirm completion
-    if (actions.canConfirmCompletion) {
-      recommendations.push({
-        type: "confirm",
-        title: "Confirm Completion",
-        description: "The other party has requested completion",
-        action: "Confirm",
-        icon: CheckCircle,
-        handler: onComplete
+        icon: XCircle,
+        handler: onReject,
+        group: "secondary"
       })
     }
 
@@ -243,20 +307,9 @@ export function SmartActionPanel({
         title: "Reject Completion",
         description: "Reject the completion request",
         action: "Reject Completion",
-        icon: AlertTriangle,
-        handler: () => onWorkflowAction("REJECT_COMPLETION")
-      })
-    }
-
-    // Raise dispute
-    if (actions.canRaiseDispute && onWorkflowAction) {
-      recommendations.push({
-        type: "urgent",
-        title: "Raise Dispute",
-        description: "Initiate a dispute resolution process",
-        action: "Dispute",
-        icon: Scale,
-        handler: () => onWorkflowAction("RAISE_DISPUTE")
+        icon: XCircle,
+        handler: () => onWorkflowAction("REJECT_COMPLETION"),
+        group: "secondary"
       })
     }
 
@@ -267,8 +320,9 @@ export function SmartActionPanel({
         title: "Download Receipt",
         description: "Download the completion receipt",
         action: "Download",
-        icon: CheckCircle,
-        handler: onDownloadReceipt
+        icon: Download,
+        handler: onDownloadReceipt,
+        group: "secondary"
       })
     }
 
@@ -279,8 +333,9 @@ export function SmartActionPanel({
         title: "Duplicate Agreement",
         description: "Create a copy of this agreement",
         action: "Duplicate",
-        icon: FileText,
-        handler: onDuplicate
+        icon: Copy,
+        handler: onDuplicate,
+        group: "secondary"
       })
     }
 
@@ -291,8 +346,9 @@ export function SmartActionPanel({
         title: "View Audit Log",
         description: "See all actions taken on this agreement",
         action: "View Audit",
-        icon: Activity,
-        handler: onViewAudit
+        icon: Eye,
+        handler: onViewAudit,
+        group: "secondary"
       })
     }
 
@@ -378,15 +434,94 @@ export function SmartActionPanel({
     if (isCreator && counterpartySignatures.length === 0 && onWithdraw && agreement.status !== "withdrawn" && !actions.canWithdrawOffer) {
       recommendations.push({
         type: "action",
-        title: "Withdraw Agreement",
-        description: "Remove this agreement before any signatures are collected",
+        title: "Withdraw Offer",
+        description: "Withdraw this offer before counterparty signs",
         action: "Withdraw",
-        icon: AlertTriangle,
-        handler: onWithdraw
+        icon: Ban,
+        handler: () => {}, // Dialog handles this
+        group: "danger",
+        customComponent: (
+          <WithdrawDialog
+            key="withdraw-dialog"
+            agreementId={agreement.id}
+            agreementTitle={agreement.title}
+            onSuccess={onRefresh}
+            trigger={
+              <Button size="sm" variant="outline" className="text-xs font-medium border-yellow-500/30 text-yellow-300 hover:bg-yellow-500/10">
+                Withdraw
+              </Button>
+            }
+          />
+        )
       })
     }
 
-    // Dispute handling
+    // Terminate agreement (use dialog component)
+    if (actions.canTerminateAgreement) {
+      recommendations.push({
+        type: "urgent",
+        title: "Terminate Agreement",
+        description: "Terminate this active agreement",
+        action: "Terminate",
+        icon: XCircle,
+        handler: () => {}, // Dialog handles this
+        group: "danger",
+        customComponent: (
+          <TerminateDialog
+            key="terminate-dialog"
+            agreementId={agreement.id}
+            agreementTitle={agreement.title}
+            onSuccess={onRefresh}
+            trigger={
+              <Button size="sm" variant="destructive" className="text-xs font-medium">
+                Terminate
+              </Button>
+            }
+          />
+        )
+      })
+    }
+
+    // Cancel agreement
+    if (actions.canCancel && onCancel) {
+      recommendations.push({
+        type: "action",
+        title: "Cancel Agreement",
+        description: "Cancel this agreement before counterparty signs",
+        action: "Cancel",
+        icon: XCircle,
+        handler: onCancel,
+        group: "danger"
+      })
+    }
+
+    // Delete agreement
+    if (actions.canDelete && onDelete) {
+      recommendations.push({
+        type: "action",
+        title: "Delete Agreement",
+        description: "Permanently delete this agreement",
+        action: "Delete",
+        icon: AlertTriangle,
+        handler: onDelete,
+        group: "danger"
+      })
+    }
+
+    // Raise dispute (legacy)
+    if (actions.canRaiseDispute && onWorkflowAction) {
+      recommendations.push({
+        type: "urgent",
+        title: "Raise Dispute",
+        description: "Initiate a dispute resolution process",
+        action: "Dispute",
+        icon: Scale,
+        handler: () => onWorkflowAction("RAISE_DISPUTE"),
+        group: "danger"
+      })
+    }
+
+    // Special case: Dispute handling
     if (agreement.status === "active" && agreement.rejectedBy && agreement.rejectedBy !== userId && onWorkflowAction) {
       recommendations.push({
         type: "confirm",
@@ -394,7 +529,8 @@ export function SmartActionPanel({
         description: "The other party rejected completion. You can accept or dispute it.",
         action: "Dispute",
         icon: AlertTriangle,
-        handler: () => onWorkflowAction("DISPUTE_REJECTION")
+        handler: () => onWorkflowAction("DISPUTE_REJECTION"),
+        group: "primary"
       })
     }
 
@@ -405,7 +541,8 @@ export function SmartActionPanel({
         description: "Negotiation has reached a deadlock. Consider legal resolution.",
         action: "Escalate",
         icon: Scale,
-        handler: () => onWorkflowAction("ESCALATE_LEGAL")
+        handler: () => onWorkflowAction("ESCALATE_LEGAL"),
+        group: "primary"
       })
     }
 
@@ -413,6 +550,15 @@ export function SmartActionPanel({
   }
 
   const recommendations = getRecommendations()
+
+  // Group recommendations
+  const primaryActions = recommendations.filter(r => r.group === "primary")
+  const secondaryActions = recommendations.filter(r => r.group === "secondary")
+  const dangerActions = recommendations.filter(r => r.group === "danger")
+
+  // Show action disabled reasons and warnings
+  const hasReasons = Object.values(actions.reasons).some(r => r)
+  const hasWarnings = Object.values(actions.warnings).some(w => w)
 
   return (
     <Card className="bg-gradient-to-br from-slate-900/80 to-slate-800/80 border-slate-700 backdrop-blur-xl shadow-2xl overflow-hidden">
@@ -434,6 +580,30 @@ export function SmartActionPanel({
       </CardHeader>
 
       <CardContent className="space-y-6">
+        {/* Warnings */}
+        {hasWarnings && (
+          <div className="space-y-2">
+            {Object.entries(actions.warnings).map(([key, warning]) => warning && (
+              <div key={key} className="flex items-center gap-2 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30 text-yellow-300">
+                <AlertTriangle className="w-4 h-4" />
+                <span className="text-sm">{warning}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Disabled reasons */}
+        {hasReasons && (
+          <div className="space-y-2">
+            {Object.entries(actions.reasons).map(([key, reason]) => reason && (
+              <div key={key} className="flex items-center gap-2 p-3 rounded-lg bg-slate-800/50 border border-slate-700 text-slate-400">
+                <AlertTriangle className="w-4 h-4" />
+                <span className="text-sm">{reason}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Progress Tracker */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
@@ -464,14 +634,17 @@ export function SmartActionPanel({
           </div>
         </div>
 
-        {/* Smart Recommendations */}
-        {recommendations.length > 0 && (
+        {/* Primary Actions */}
+        {primaryActions.length > 0 && (
           <div className="space-y-3">
             <h4 className="text-sm font-semibold text-slate-300 flex items-center gap-2">
               <Star className="w-4 h-4 text-yellow-400" />
-              Recommended Actions
+              Primary Actions
             </h4>
-            {recommendations.map((rec, index) => {
+            {primaryActions.map((rec, index) => {
+              if (rec.customComponent) {
+                return <div key={index}>{rec.customComponent}</div>
+              }
               const Icon = rec.icon
               return (
                 <div
@@ -523,6 +696,82 @@ export function SmartActionPanel({
                 </div>
               )
             })}
+          </div>
+        )}
+
+        {/* Secondary Actions */}
+        {secondaryActions.length > 0 && (
+          <div className="space-y-3">
+            <h4 className="text-sm font-semibold text-slate-300 flex items-center gap-2">
+              <FileText className="w-4 h-4 text-blue-400" />
+              Additional Actions
+            </h4>
+            <div className="flex flex-wrap gap-2">
+              {secondaryActions.map((rec, index) => {
+                if (rec.customComponent) {
+                  return <div key={index}>{rec.customComponent}</div>
+                }
+                const Icon = rec.icon
+                return (
+                  <Button
+                    key={index}
+                    size="sm"
+                    variant="outline"
+                    className="text-xs gap-2"
+                    onClick={async () => {
+                      try {
+                        if (rec.handler) {
+                          await rec.handler()
+                        }
+                      } catch (err) {
+                        alert(err instanceof Error ? err.message : "Action failed")
+                      }
+                    }}
+                  >
+                    <Icon className="w-3 h-3" />
+                    {rec.action}
+                  </Button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Danger Actions */}
+        {dangerActions.length > 0 && (
+          <div className="space-y-3">
+            <h4 className="text-sm font-semibold text-red-300 flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-red-400" />
+              Danger Zone
+            </h4>
+            <div className="flex flex-wrap gap-2">
+              {dangerActions.map((rec, index) => {
+                if (rec.customComponent) {
+                  return <div key={index}>{rec.customComponent}</div>
+                }
+                const Icon = rec.icon
+                return (
+                  <Button
+                    key={index}
+                    size="sm"
+                    variant="outline"
+                    className="text-xs gap-2 border-red-500/30 text-red-300 hover:bg-red-500/10"
+                    onClick={async () => {
+                      try {
+                        if (rec.handler) {
+                          await rec.handler()
+                        }
+                      } catch (err) {
+                        alert(err instanceof Error ? err.message : "Action failed")
+                      }
+                    }}
+                  >
+                    <Icon className="w-3 h-3" />
+                    {rec.action}
+                  </Button>
+                )
+              })}
+            </div>
           </div>
         )}
 
