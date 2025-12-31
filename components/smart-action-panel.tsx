@@ -23,7 +23,12 @@ import {
   XCircle,
   Trash2,
   Edit3,
-  Send
+  Send,
+  Copy,
+  RefreshCw,
+  Download,
+  Eye,
+  MessageSquare
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { Agreement } from "@/lib/agreement-types"
@@ -32,6 +37,7 @@ import { WithdrawDialog } from "@/components/agreement/dialogs/withdraw-dialog"
 import { TerminateDialog } from "@/components/agreement/dialogs/terminate-dialog"
 import { BreachReportDialog } from "@/components/agreement/dialogs/breach-report-dialog"
 import { BreachResponseDialog } from "@/components/agreement/dialogs/breach-response-dialog"
+import { AmendmentRequestDialog } from "@/components/amendment-request-dialog"
 
 interface SmartActionPanelProps {
   agreement: Agreement
@@ -57,6 +63,9 @@ interface SmartActionPanelProps {
   onReportBreach?: (description: string, evidence?: File[]) => Promise<void>
   onRespondToBreach?: (responseType: string, message: string, evidence?: File[]) => Promise<void>
   counterpartySignTriggerId?: string
+  creatorSignTriggerId?: string
+  onRefresh?: () => void | Promise<void>
+  onResend?: () => void | Promise<void>
 }
 
 export function SmartActionPanel({
@@ -83,6 +92,9 @@ export function SmartActionPanel({
   onReportBreach,
   onRespondToBreach,
   counterpartySignTriggerId,
+  creatorSignTriggerId,
+  onRefresh,
+  onResend,
 }: SmartActionPanelProps) {
   const [isExpanded, setIsExpanded] = useState(true)
 

@@ -68,6 +68,7 @@ export default function AgreementDetailsPage({ params }: { params: Promise<{ id:
   const [showCertificate, setShowCertificate] = useState(false)
   const contentRef = useRef<HTMLDivElement | null>(null)
   const counterpartySignTriggerId = `counterparty-sign-${resolvedParams.id}`
+  const creatorSignTriggerId = `creator-sign-${resolvedParams.id}`
   const openCounterpartySignDialog = useCallback(() => {
     document.getElementById(counterpartySignTriggerId)?.click()
   }, [counterpartySignTriggerId])
@@ -851,6 +852,9 @@ export default function AgreementDetailsPage({ params }: { params: Promise<{ id:
                   onComplete={handleComplete}
                   onSignAsCounterparty={openCounterpartySignDialog}
                   onSignAsCreator={handleCreatorSign}
+                  counterpartySignTriggerId={counterpartySignTriggerId}
+                  creatorSignTriggerId={creatorSignTriggerId}
+                  onRefresh={refreshAgreements}
                   onEdit={() => router.push(`/agreement/${resolvedParams.id}/edit`)}
                   onSendForSignature={async () => {
                     try {
