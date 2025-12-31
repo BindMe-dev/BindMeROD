@@ -9,6 +9,7 @@
     "dev:db": "docker compose up -d db && next dev",
     "dev:full": "docker compose up -d && npm run db:push && next dev",
     "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
     "start": "next start",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
