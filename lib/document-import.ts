@@ -35,16 +35,17 @@ interface ExtractedTerms {
 export class DocumentImport {
   /**
    * Parse PDF document
-   * Note: This is a placeholder. In production, use a library like pdf-parse or pdfjs-dist
+   * WARNING: This is a placeholder implementation. 
+   * In production, integrate a library like pdf-parse, pdfjs-dist, or pdf2json
    */
   static async parsePDF(file: File): Promise<ParsedDocument> {
     try {
       // TODO: Implement actual PDF parsing using pdf-parse or similar
       // For now, return placeholder data
-      console.warn('PDF parsing not fully implemented. Using placeholder.')
+      console.warn('⚠️ PDF parsing not fully implemented. This is a placeholder. Integrate pdf-parse library for production use.')
       
       return {
-        text: 'PDF content would be extracted here',
+        text: 'PDF content extraction requires pdf-parse library integration. This is placeholder data.',
         title: file.name.replace('.pdf', ''),
         metadata: {
           pages: 0,
@@ -52,27 +53,28 @@ export class DocumentImport {
       }
     } catch (error) {
       console.error('PDF parsing error:', error)
-      throw new Error('Failed to parse PDF document')
+      throw new Error('Failed to parse PDF document. PDF parsing library not yet integrated.')
     }
   }
 
   /**
    * Parse Word document (.docx)
-   * Note: This is a placeholder. In production, use a library like mammoth or docx
+   * WARNING: This is a placeholder implementation.
+   * In production, integrate a library like mammoth or docx
    */
   static async parseWord(file: File): Promise<ParsedDocument> {
     try {
       // TODO: Implement actual Word parsing using mammoth or similar
       // For now, return placeholder data
-      console.warn('Word parsing not fully implemented. Using placeholder.')
+      console.warn('⚠️ Word parsing not fully implemented. This is a placeholder. Integrate mammoth library for production use.')
       
       return {
-        text: 'Word document content would be extracted here',
+        text: 'Word document extraction requires mammoth library integration. This is placeholder data.',
         title: file.name.replace('.docx', '').replace('.doc', ''),
       }
     } catch (error) {
       console.error('Word parsing error:', error)
-      throw new Error('Failed to parse Word document')
+      throw new Error('Failed to parse Word document. Word parsing library not yet integrated.')
     }
   }
 

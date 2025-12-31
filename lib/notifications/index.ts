@@ -245,7 +245,7 @@ export class NotificationService {
         }
 
       case "sent_for_signature":
-        const isInvitation = params.actorId !== params.recipientEmail
+        const isInvitation = params.actorId !== params.recipientEmail // Check if recipient is not the actor
         return {
           subject: isInvitation 
             ? `You've been invited to sign: ${params.agreementTitle}`

@@ -40,6 +40,8 @@ export function NegotiationChat({
 
   useEffect(() => {
     initializeChat()
+    // TODO: Replace polling with WebSocket/Pusher for real-time updates
+    // Current polling every 3 seconds can create server load with many users
     const interval = setInterval(fetchMessages, 3000) // Poll every 3 seconds
     return () => clearInterval(interval)
   }, [agreementId])

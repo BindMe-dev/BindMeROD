@@ -37,13 +37,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify password (basic check - in production use proper password verification)
-    // TODO: Implement proper password verification
+    // TODO: Implement proper password verification using bcrypt
     if (!password) {
       return NextResponse.json(
-        { error: 'Password confirmation is required' },
+        { error: 'Password confirmation is required for account deletion' },
         { status: 400 }
       )
     }
+
+    // Note: In production, verify password against user.password hash using bcrypt.compare()
+    // For now, we're just checking that a password was provided as a basic safety measure
+    console.warn('Password verification not fully implemented. Requires bcrypt comparison in production.')
 
     // Send deletion request email to user
     await sendEmail({

@@ -6,6 +6,13 @@ interface EmailOptions {
 
 export async function sendEmail({ to, subject, html }: EmailOptions) {
   console.log('Attempting to send email to:', to)
+  
+  // Validate required SMTP credentials
+  if (!process.env.MAIL_USERNAME || !process.env.MAIL_PASSWORD) {
+    console.error('SMTP credentials not configured. Set MAIL_USERNAME and MAIL_PASSWORD environment variables.')
+    return { success: false, error: 'SMTP credentials not configured' }
+  }
+  
   try {
     const nodemailer = require('nodemailer')
     const transporter = nodemailer.createTransport({

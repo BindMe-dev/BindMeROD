@@ -35,7 +35,9 @@ export async function POST(
 
     // Check if user is creator or counterparty
     const isCreator = agreement.userId === userId
-    const isCounterparty = agreement.betOpponentEmail // TODO: Verify counterparty user ID
+    // TODO: Implement proper counterparty user ID verification
+    // Currently only checks if counterparty email exists
+    const isCounterparty = agreement.betOpponentEmail // Placeholder - needs proper user verification
     
     if (!isCreator && !isCounterparty) {
       return NextResponse.json(
@@ -43,6 +45,9 @@ export async function POST(
         { status: 403 }
       )
     }
+
+    // Additional security: Log export attempts for audit purposes
+    console.log(`PDF export requested by user ${userId} for agreement ${agreementId}`)
 
     // Parse request body for options
     const body = await request.json().catch(() => ({}))
