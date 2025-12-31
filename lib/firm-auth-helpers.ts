@@ -8,12 +8,14 @@ import { db } from "@/lib/db"
 import { lawFirms } from "@/lib/db/schema"
 import { eq } from "drizzle-orm"
 import { SignJWT, jwtVerify } from "jose"
+import bcrypt from "bcryptjs"
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || "your-secret-key-change-in-production"
 )
 
 const FIRM_TOKEN_COOKIE = "firm_auth_token"
+const BCRYPT_ROUNDS = 12
 
 /**
  * Generate JWT token for law firm
@@ -82,25 +84,17 @@ export async function getAuthenticatedFirm(request: NextRequest) {
 }
 
 /**
- * Hash password (simple implementation - use bcrypt in production)
+ * Hash password using bcrypt
  */
 export async function hashPassword(password: string): Promise<string> {
-  // TODO: Use bcrypt or argon2 in production
-  // For now, using a simple hash (NOT SECURE FOR PRODUCTION)
-  const encoder = new TextEncoder()
-  const data = encoder.encode(password)
-  const hashBuffer = await crypto.subtle.digest("SHA-256", data)
-  const hashArray = Array.from(new Uint8Array(hashBuffer))
-  const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("")
-  return hashHex
+  return bcrypt.hash(password, BCRYPT_ROUNDS)
 }
 
 /**
- * Verify password
+ * Verify password using bcrypt
  */
 export async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  const passwordHash = await hashPassword(password)
-  return passwordHash === hash
+  return bcrypt.compare(password, hash)
 }
 
 /**
